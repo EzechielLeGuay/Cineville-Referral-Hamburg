@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cineville Hamburg - Referral Program</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Averta font imports */
+        @font-face {
+            font-family: 'Averta';
+            src: local('Averta Bold'), local('Averta-Bold'), url('https://fonts.cdnfonts.com/s/29136/AvertaBold.woff') format('woff');
+            font-weight: 900;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Averta';
+            src: local('Averta Regular'), local('Averta-Regular'), url('https://fonts.cdnfonts.com/s/29136/AvertaRegular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        * {
+            font-family: 'Averta', sans-serif !important;
+        }
+
+        body {
+            background-color: #F8F2E7;
+            color: #000000;
+            overflow-x: hidden;
+        }
+
+        .cineville-btn {
+            background-color: #000000;
+            color: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .cineville-btn:hover {
+            opacity: 0.85;
+            transform: translateY(-1px);
+        }
+
+        .cineville-card {
+            border: 2px solid #000000;
+            box-shadow: 4px 4px 0px #000000;
+        }
+
+        /* --- Effet d'impact lors du verrouillage du score --- */
+        .score-lock {
+            animation: popLock 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popLock {
+            0% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        /* --- Cascade d'images de cartes --- */
+        .card-cascade-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .floating-card-img {
+            position: absolute;
+            top: -200px;
+            width: 110px;
+            height: auto;
+            filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.15));
+            opacity: 0;
+            animation: floatDown linear infinite;
+        }
+
+        .card-1 { left: 6%;  animation-duration: 10s; animation-delay: 0s;   transform: rotate(-15deg); }
+        .card-2 { left: 22%; animation-duration: 9s;  animation-delay: 1.5s; transform: rotate(20deg); }
+        .card-3 { left: 45%; animation-duration: 11s; animation-delay: 4s;   transform: rotate(-8deg); }
+        .card-4 { left: 68%; animation-duration: 9.5s; animation-delay: 2.5s; transform: rotate(18deg); }
+        .card-5 { left: 82%; animation-duration: 10s; animation-delay: 6s;   transform: rotate(-25deg); }
+        .card-6 { left: 92%; animation-duration: 12s; animation-delay: 3.5s; transform: rotate(12deg); }
+
+        @keyframes floatDown {
+            0% { top: -200px; opacity: 0; }
+            5% { opacity: 0.85; }
+            90% { opacity: 0.85; }
+            100% { top: 105vh; opacity: 0; }
+        }
+
+        /* --- SYSTEME DE POPCORN DYNAMIQUE --- */
+        #popcorn-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        .popcorn-particle {
+            position: absolute;
+            top: -60px;
+            user-select: none;
+            pointer-events: none;
+            animation: popcornFall linear forwards;
+        }
+
+        @keyframes popcornFall {
+            0% {
+                top: -60px;
+                opacity: 1;
+                transform: translateX(0) rotate(0deg);
+            }
+            100% {
+                top: 105vh;
+                opacity: 0.9;
+                transform: translateX(var(--drift)) rotate(var(--rot));
+            }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4 relative">
+
+    <!-- Container pour l'explosion de popcorn -->
+    <div id="popcorn-container"></div>
+
+    <!-- Cascading Floating Cards Container -->
+    <div class="card-cascade-container">
+        <img src="Images/Carte Cineville.png" class="floating-card-img card-1" alt="Cineville Card">
+        <img src="Images/Carte Cineville.png" class="floating-card-img card-2" alt="Cineville Card">
+        <img src="Images/Carte Cineville.png" class="floating-card-img card-3" alt="Cineville Card">
+        <img src="Images/Carte Cineville.png" class="floating-card-img card-4" alt="Cineville Card">
+        <img src="Images/Carte Cineville.png" class="floating-card-img card-5" alt="Cineville Card">
+        <img src="Images/Carte Cineville.png" class="floating-card-img card-6" alt="Cineville Card">
+    </div>
+
+    <!-- Main card -->
+    <div class="bg-[#F7DEBB] p-8 md:p-10 rounded-2xl cineville-card max-w-lg w-full relative z-10">
+        
+        <!-- Countdown banner -->
+        <div class="text-center mb-6">
+            <p id="days-number" class="text-5xl md:text-6xl font-black tracking-tight text-[#3D0B00]">--</p>
+            <p class="text-sm font-bold mt-1 text-[#3D0B00]">left before Dec 1, 2026</p>
+        </div>
+
+        <!-- 1. Main Title (Décompte Gamifié) -->
+        <div class="text-center mb-6">
+            <h1 id="user-percentile-title" class="text-5xl md:text-6xl font-black leading-tight text-[#3D0B00] transition-transform">
+                --
+            </h1>
+        </div>
+
+        <p class="text-[#3D0B00] text-center text-lg mb-8 font-medium">
+            See if you are eligible to receive this gift!
+        </p>
+
+        <!-- Login section -->
+        <div id="login-section">
+            <label class="block text-sm font-bold text-black mb-2">
+                Cineville account number
+            </label>
+            <input type="text" id="cineville-id" placeholder="e.g. CINE001" class="w-full px-4 py-3 border-2 border-black rounded-xl focus:outline-none focus:ring-2 focus:ring-black mb-4 font-bold text-lg bg-white">
+            
+            <button onclick="fetchDashboard()" class="w-full cineville-btn font-bold text-lg py-3 rounded-xl">
+                View my ranking
+            </button>
+            
+            <p id="error-message" class="text-red-600 font-bold text-sm mt-3 hidden text-center"></p>
+        </div>
+
+        <!-- Dashboard section -->
+        <div id="dashboard-section" class="hidden">
+            
+            <!-- 2. Status Badge -->
+            <div id="status-message" class="text-center p-5 rounded-xl border-2 border-black font-medium text-base mb-6"></div>
+
+            <!-- 3. Friend(s) referred -->
+            <div id="stat-card" class="p-6 border-2 border-black rounded-xl text-center mb-6">
+                <p class="text-5xl font-black text-black" id="stat-referrals">--</p>
+                <p class="text-xs font-bold text-gray-800 mt-2">Friend(s) referred</p>
+            </div>
+
+            <!-- 4. Referral Code Display -->
+            <div id="code-card" class="border-2 border-black p-4 rounded-xl mb-2 text-center">
+                <p class="text-xs font-bold text-gray-800 mb-2">Your unique referral code</p>
+                <div class="flex items-center justify-center gap-3">
+                    <span id="share-code" class="text-2xl font-black text-black px-4 py-2 rounded-lg border-2 border-black tracking-widest">
+                        ------
+                    </span>
+                    <button onclick="copyCode()" class="text-sm font-bold bg-black text-white px-4 py-3 rounded-lg hover:opacity-80">
+                        Copy
+                    </button>
+                </div>
+            </div>
+
+            <button onclick="logout()" class="w-full mt-6 text-black text-sm font-bold underline hover:opacity-75">
+                Switch account
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // Countdown calculation
+        const targetDate = new Date("2026-12-01T00:00:00Z").getTime();
+
+        function updateDays() {
+            const now = new Date().getTime();
+            const difference = targetDate - now;
+
+            if (difference <= 0) {
+                document.getElementById('days-number').innerText = "0 days";
+                return;
+            }
+
+            const days = Math.ceil(difference / (1000 * 60 * 60 * 24));
+            document.getElementById('days-number').innerText = `${days} days`;
+        }
+
+        updateDays();
+
+        // Animation de Gamification (Décompte de 100% à la cible)
+        function animateScore(targetScore, callback) {
+            const titleEl = document.getElementById('user-percentile-title');
+            let currentScore = 100;
+            const duration = 1400; // 1.4s de décompte
+            const steps = 30;
+            const stepTime = duration / steps;
+            const decrement = (100 - targetScore) / steps;
+
+            titleEl.classList.remove('score-lock');
+
+            const timer = setInterval(() => {
+                currentScore -= decrement;
+                if (currentScore <= targetScore) {
+                    currentScore = targetScore;
+                    clearInterval(timer);
+                    titleEl.innerText = `Top ${Math.round(currentScore)}%`;
+                    titleEl.classList.add('score-lock');
+                    if (callback) callback();
+                } else {
+                    titleEl.innerText = `Top ${Math.round(currentScore)}%`;
+                }
+            }, stepTime);
+        }
+
+        // --- NOUVELLE FONCTION D'EXPLOSION DE DE POPCORNS ---
+        function triggerPopcorn() {
+            const container = document.getElementById('popcorn-container');
+            container.innerHTML = ''; // Réinitialisation
+
+            const popcornCount = 70; // Nombre de pop-corns projetés
+
+            for (let i = 0; i < popcornCount; i++) {
+                const popcorn = document.createElement('img');
+                popcorn.src = 'Images/Popcorn.png'; // Ton image Popcorn.png
+                popcorn.className = 'popcorn-particle';
+
+                // Position de départ aléatoire en X (0% à 100% de l'écran)
+                const startX = Math.random() * 100;
+                popcorn.style.left = `${startX}vw`;
+
+                // Taille aléatoire des pop-corns (entre 35px et 70px)
+                const size = Math.random() * 35 + 35;
+                popcorn.style.width = `${size}px`;
+                popcorn.style.height = 'auto';
+
+                // Durée de chute aléatoire (entre 2.5s et 5s)
+                const duration = Math.random() * 2.5 + 2.5;
+                popcorn.style.animationDuration = `${duration}s`;
+
+                // Décalage de démarrage (pour un effet d'explosion continu)
+                const delay = Math.random() * 1.5;
+                popcorn.style.animationDelay = `${delay}s`;
+
+                // Dérive horizontale et rotation aléatoires pendant la chute
+                const drift = (Math.random() - 0.5) * 200; // -100px à +100px
+                const rotation = Math.random() * 720 - 360; // Rotation complète
+                popcorn.style.setProperty('--drift', `${drift}px`);
+                popcorn.style.setProperty('--rot', `${rotation}deg`);
+
+                container.appendChild(popcorn);
+            }
+
+            // Nettoyage automatique du DOM après 7 secondes
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 7000);
+        }
+
+        async function fetchDashboard() {
+            const userId = document.getElementById('cineville-id').value.trim();
+            const errorEl = document.getElementById('error-message');
+            
+            if (!userId) {
+                errorEl.innerText = "Please enter a valid Cineville account number";
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                // Simulation locale pour test (CINE001 = Top 5%, autre = Top 20%)
+                const data = (userId === "CINE001") ? 
+                    { isTop5: true, percentile: 5, referrals: 42, referralCode: "AHJDG4" } :
+                    { isTop5: false, percentile: 20, referrals: 28, referralCode: "AHJDG4" };
+
+                errorEl.classList.add('hidden');
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('dashboard-section').classList.remove('hidden');
+
+                // Lancement de l'animation du score de 100% à data.percentile
+                animateScore(data.percentile, () => {
+                    if (data.isTop5) {
+                        triggerPopcorn();
+                    }
+                });
+
+                document.getElementById('share-code').innerText = data.referralCode || "AHJDG4";
+                document.getElementById('stat-referrals').innerText = data.referrals;
+                
+                const statusEl = document.getElementById('status-message');
+                const statCardEl = document.getElementById('stat-card');
+                const codeCardEl = document.getElementById('code-card');
+                const shareCodeEl = document.getElementById('share-code');
+
+                if (data.isTop5) {
+                    const greenBg = "bg-[#C0E8C1]";
+                    statusEl.className = `text-center p-5 rounded-xl border-2 border-black font-medium text-base ${greenBg} text-black mb-6`;
+                    statusEl.innerHTML = "<strong>You're a true film lover!</strong> You've earned your place in the Top 5%. Hold your position until Dec 1 to get 12 months of unlimited cinema.";
+                    
+                    statCardEl.className = `p-6 border-2 border-black rounded-xl ${greenBg} text-center mb-6`;
+                    codeCardEl.className = `${greenBg} border-2 border-black p-4 rounded-xl mb-2 text-center`;
+                    shareCodeEl.className = `text-2xl font-black text-black ${greenBg} px-4 py-2 rounded-lg border-2 border-black tracking-widest`;
+
+                } else {
+                    const yellowBg = "bg-[#FDE68A]";
+                    statusEl.className = `text-center p-5 rounded-xl border-2 border-black font-medium text-base ${yellowBg} text-black mb-6`;
+                    statusEl.innerHTML = `Not in the Top 5% yet. Get more friends to sign up with your code to move up the rankings before Dec 1, 2026!`;
+                    
+                    statCardEl.className = `p-6 border-2 border-black rounded-xl ${yellowBg} text-center mb-6`;
+                    codeCardEl.className = `${yellowBg} border-2 border-black p-4 rounded-xl mb-2 text-center`;
+                    shareCodeEl.className = `text-2xl font-black text-black ${yellowBg} px-4 py-2 rounded-lg border-2 border-black tracking-widest`;
+                }
+
+            } catch (err) {
+                errorEl.innerText = err.message || "User not found";
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        function copyCode() {
+            const code = document.getElementById('share-code').innerText;
+            navigator.clipboard.writeText(code);
+            alert(`Referral code ${code} copied!`);
+        }
+
+        function logout() {
+            document.getElementById('cineville-id').value = '';
+            document.getElementById('user-percentile-title').innerText = "--";
+            document.getElementById('stat-referrals').innerText = "--";
+            document.getElementById('dashboard-section').classList.add('hidden');
+            document.getElementById('login-section').classList.remove('hidden');
+            document.getElementById('popcorn-container').innerHTML = '';
+        }
+    </script>
+</body>
+</html>

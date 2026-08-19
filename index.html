@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cineville Hamburg - Referral Program</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Averta font imports */
         @font-face {
             font-family: 'Averta';
             src: local('Averta Bold'), local('Averta-Bold'), url('https://fonts.cdnfonts.com/s/29136/AvertaBold.woff') format('woff');
@@ -46,17 +45,42 @@
             box-shadow: 4px 4px 0px #000000;
         }
 
-        /* --- Effet d'impact lors du verrouillage du score --- */
+        /* --- STYLES ET ANIMATIONS DE LA JAUGE --- */
+        .gauge-smooth {
+            transition: width 1.8s cubic-bezier(0.16, 1, 0.3, 1), left 1.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Effet visuel hachuré sur la barre noire */
+        .gauge-bar-pattern {
+            background-image: linear-gradient(
+                45deg, 
+                rgba(255, 255, 255, 0.15) 25%, 
+                transparent 25%, 
+                transparent 50%, 
+                rgba(255, 255, 255, 0.15) 50%, 
+                rgba(255, 255, 255, 0.15) 75%, 
+                transparent 75%, 
+                transparent
+            );
+            background-size: 1rem 1rem;
+            animation: moveStripes 2s linear infinite;
+        }
+
+        @keyframes moveStripes {
+            0% { background-position: 0 0; }
+            100% { background-position: 1rem 0; }
+        }
+
         .score-lock {
-            animation: popLock 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: popLock 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         @keyframes popLock {
-            0% { transform: scale(1.3); }
+            0% { transform: scale(1.15); }
             100% { transform: scale(1); }
         }
 
-        /* --- Cascade d'images de cartes --- */
+        /* Cascade d'images de cartes Cineville */
         .card-cascade-container {
             position: fixed;
             top: 0;
@@ -92,7 +116,7 @@
             100% { top: 105vh; opacity: 0; }
         }
 
-        /* --- SYSTEME DE POPCORN DYNAMIQUE --- */
+        /* Popcorn Animation */
         #popcorn-container {
             position: fixed;
             top: 0;
@@ -113,25 +137,16 @@
         }
 
         @keyframes popcornFall {
-            0% {
-                top: -60px;
-                opacity: 1;
-                transform: translateX(0) rotate(0deg);
-            }
-            100% {
-                top: 105vh;
-                opacity: 0.9;
-                transform: translateX(var(--drift)) rotate(var(--rot));
-            }
+            0% { top: -60px; opacity: 1; transform: translateX(0) rotate(0deg); }
+            100% { top: 105vh; opacity: 0.9; transform: translateX(var(--drift)) rotate(var(--rot)); }
         }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-4 relative">
 
-    <!-- Container pour l'explosion de popcorn -->
     <div id="popcorn-container"></div>
 
-    <!-- Cascading Floating Cards Container -->
+    <!-- Fond animé cartes Cineville -->
     <div class="card-cascade-container">
         <img src="Images/Carte Cineville.png" class="floating-card-img card-1" alt="Cineville Card">
         <img src="Images/Carte Cineville.png" class="floating-card-img card-2" alt="Cineville Card">
@@ -141,158 +156,203 @@
         <img src="Images/Carte Cineville.png" class="floating-card-img card-6" alt="Cineville Card">
     </div>
 
-    <!-- Main card -->
-    <div class="bg-[#F7DEBB] p-8 md:p-10 rounded-2xl cineville-card max-w-lg w-full relative z-10">
+    <!-- Carte Principale -->
+    <div class="bg-[#F7DEBB] p-8 md:p-10 rounded-2xl cineville-card max-w-lg w-full relative z-10 flex flex-col justify-between">
         
-        <!-- Countdown banner -->
-        <div class="text-center mb-6">
-            <p id="days-number" class="text-5xl md:text-6xl font-black tracking-tight text-[#3D0B00]">--</p>
-            <p class="text-sm font-bold mt-1 text-[#3D0B00]">left before Dec 1, 2026</p>
-        </div>
-
-        <!-- 1. Main Title (Décompte Gamifié) -->
-        <div class="text-center mb-6">
-            <h1 id="user-percentile-title" class="text-5xl md:text-6xl font-black leading-tight text-[#3D0B00] transition-transform">
-                --
-            </h1>
-        </div>
-
-        <p class="text-[#3D0B00] text-center text-lg mb-8 font-medium">
-            See if you are eligible to receive this gift!
-        </p>
-
-        <!-- Login section -->
-        <div id="login-section">
-            <label class="block text-sm font-bold text-black mb-2">
-                Cineville account number
-            </label>
-            <input type="text" id="cineville-id" placeholder="e.g. CINE001" class="w-full px-4 py-3 border-2 border-black rounded-xl focus:outline-none focus:ring-2 focus:ring-black mb-4 font-bold text-lg bg-white">
-            
-            <button onclick="fetchDashboard()" class="w-full cineville-btn font-bold text-lg py-3 rounded-xl">
-                View my ranking
-            </button>
-            
-            <p id="error-message" class="text-red-600 font-bold text-sm mt-3 hidden text-center"></p>
-        </div>
-
-        <!-- Dashboard section -->
-        <div id="dashboard-section" class="hidden">
-            
-            <!-- 2. Status Badge -->
-            <div id="status-message" class="text-center p-5 rounded-xl border-2 border-black font-medium text-base mb-6"></div>
-
-            <!-- 3. Friend(s) referred -->
-            <div id="stat-card" class="p-6 border-2 border-black rounded-xl text-center mb-6">
-                <p class="text-5xl font-black text-black" id="stat-referrals">--</p>
-                <p class="text-xs font-bold text-gray-800 mt-2">Friend(s) referred</p>
+        <div>
+            <!-- Grand Score / Titre Animé -->
+            <div class="text-center mb-4">
+                <h1 id="user-percentile-title" class="text-4xl md:text-5xl font-black leading-tight text-[#3D0B00] transition-transform">
+                    How about one year of free cinema?
+                </h1>
             </div>
 
-            <!-- 4. Referral Code Display -->
-            <div id="code-card" class="border-2 border-black p-4 rounded-xl mb-2 text-center">
-                <p class="text-xs font-bold text-gray-800 mb-2">Your unique referral code</p>
-                <div class="flex items-center justify-center gap-3">
-                    <span id="share-code" class="text-2xl font-black text-black px-4 py-2 rounded-lg border-2 border-black tracking-widest">
-                        ------
-                    </span>
-                    <button onclick="copyCode()" class="text-sm font-bold bg-black text-white px-4 py-3 rounded-lg hover:opacity-80">
-                        Copy
-                    </button>
+            <!-- Sous-titre (Caché sur le tableau de bord) -->
+            <p id="main-subtitle" class="text-[#3D0B00] text-center text-lg mb-8 font-medium">
+                Check if you will receive the gift!
+            </p>
+
+            <!-- Formulaire de saisie -->
+            <div id="login-section">
+                <label class="block text-sm font-bold text-black mb-2">
+                    Cineville account number
+                </label>
+                <input type="text" id="cineville-id" placeholder="e.g. CINE001" class="w-full px-4 py-3 border-2 border-black rounded-xl focus:outline-none focus:ring-2 focus:ring-black mb-4 font-bold text-lg bg-white">
+                
+                <button onclick="fetchDashboard()" class="w-full cineville-btn font-bold text-lg py-3 rounded-xl">
+                    View my ranking
+                </button>
+                
+                <p id="error-message" class="text-red-600 font-bold text-sm mt-3 hidden text-center"></p>
+            </div>
+
+            <!-- Zone Tableau de bord & Jauge Animée -->
+            <div id="dashboard-section" class="hidden">
+
+                <!-- Cadre Ranking progress -->
+                <div id="progress-card" class="p-5 rounded-xl border-2 border-black shadow-[2px_2px_0px_#000] mb-6 transition-colors">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-bold text-black">Ranking progress</span>
+                        <span id="score-text" class="text-sm font-black text-black">Top 100%</span>
+                    </div>
+
+                    <div class="flex justify-between text-[10px] font-bold mb-1.5 text-black uppercase tracking-wider">
+                        <span>Top 100%</span>
+                        <span>Top 0% (#1)</span>
+                    </div>
+
+                    <!-- Rail de la Jauge de Progression -->
+                    <div class="relative w-full h-9 bg-white rounded-xl border-2 border-black p-0.5 overflow-hidden flex items-center shadow-inner">
+                        <!-- Barre de progression hachurée -->
+                        <div id="progress-bar" class="h-full bg-black gauge-bar-pattern w-0 gauge-smooth rounded-lg relative"></div>
+
+                        <!-- Curseur indicateur stylisé -->
+                        <div id="gauge-marker" class="absolute top-0 bottom-0 w-3 bg-white border-2 border-black shadow-[2px_0_5px_rgba(0,0,0,0.3)] z-30 gauge-smooth -ml-1.5 rounded-sm" style="left: 0%;"></div>
+                    </div>
                 </div>
-            </div>
+                
+                <!-- Message de Statut -->
+                <div id="status-message" class="text-center p-5 rounded-xl border-2 border-black font-medium text-base mb-6 transition-colors"></div>
 
-            <button onclick="logout()" class="w-full mt-6 text-black text-sm font-bold underline hover:opacity-75">
-                Switch account
-            </button>
+                <!-- Carte Parrainages -->
+                <div id="stat-card" class="p-6 border-2 border-black rounded-xl text-center mb-6 transition-colors">
+                    <p class="text-5xl font-black text-black" id="stat-referrals">--</p>
+                    <p class="text-xs font-bold text-gray-800 mt-2" id="referrals-label">Friend(s) referred</p>
+                </div>
+
+                <!-- Code Unique -->
+                <div id="code-card" class="border-2 border-black p-4 rounded-xl mb-2 text-center transition-colors">
+                    <p class="text-xs font-bold text-gray-800 mb-2">Your unique referral code</p>
+                    <div class="flex items-center justify-center gap-3">
+                        <span id="share-code" class="text-2xl font-black text-black px-4 py-2 rounded-lg border-2 border-black tracking-widest transition-colors">
+                            ------
+                        </span>
+                        <button onclick="copyCode()" class="text-sm font-bold bg-black text-white px-4 py-3 rounded-lg hover:opacity-80">
+                            Copy
+                        </button>
+                    </div>
+                </div>
+
+                <button onclick="logout()" class="w-full mt-6 text-black text-sm font-bold underline hover:opacity-75">
+                    Switch account
+                </button>
+            </div>
+        </div>
+
+        <!-- Décompte temps restant (Compact & Placé en bas) -->
+        <div class="mt-8 pt-4 text-center text-[#3D0B00] border-t border-[#3D0B00]/20">
+            <div class="flex items-center justify-center gap-2 sm:gap-3">
+                
+                <!-- Days -->
+                <div class="flex flex-col items-center min-w-[36px]">
+                    <span id="timer-days" class="text-xl font-black leading-none">--</span>
+                    <span class="text-[10px] font-medium opacity-80 mt-0.5">Days</span>
+                </div>
+
+                <div class="h-4 w-[1px] bg-[#3D0B00] opacity-30"></div>
+
+                <!-- Hours -->
+                <div class="flex flex-col items-center min-w-[36px]">
+                    <span id="timer-hours" class="text-xl font-black leading-none">--</span>
+                    <span class="text-[10px] font-medium opacity-80 mt-0.5">Hours</span>
+                </div>
+
+                <div class="h-4 w-[1px] bg-[#3D0B00] opacity-30"></div>
+
+                <!-- Minutes -->
+                <div class="flex flex-col items-center min-w-[36px]">
+                    <span id="timer-minutes" class="text-xl font-black leading-none">--</span>
+                    <span class="text-[10px] font-medium opacity-80 mt-0.5">Minutes</span>
+                </div>
+
+                <div class="h-4 w-[1px] bg-[#3D0B00] opacity-30"></div>
+
+                <!-- Seconds -->
+                <div class="flex flex-col items-center min-w-[36px]">
+                    <span id="timer-seconds" class="text-xl font-black leading-none">--</span>
+                    <span class="text-[10px] font-medium opacity-80 mt-0.5">Seconds</span>
+                </div>
+
+            </div>
+            <p class="text-[10px] font-bold mt-1.5 text-[#3D0B00] opacity-90">Remaining before Dec 1, 2026</p>
         </div>
 
     </div>
 
     <script>
-        // Countdown calculation
         const targetDate = new Date("2026-12-01T00:00:00Z").getTime();
 
-        function updateDays() {
+        function updateCountdown() {
             const now = new Date().getTime();
             const difference = targetDate - now;
 
             if (difference <= 0) {
-                document.getElementById('days-number').innerText = "0 days";
+                document.getElementById('timer-days').innerText = "0";
+                document.getElementById('timer-hours').innerText = "0";
+                document.getElementById('timer-minutes').innerText = "0";
+                document.getElementById('timer-seconds').innerText = "0";
                 return;
             }
 
-            const days = Math.ceil(difference / (1000 * 60 * 60 * 24));
-            document.getElementById('days-number').innerText = `${days} days`;
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+            document.getElementById('timer-days').innerText = days;
+            document.getElementById('timer-hours').innerText = String(hours).padStart(2, '0');
+            document.getElementById('timer-minutes').innerText = String(minutes).padStart(2, '0');
+            document.getElementById('timer-seconds').innerText = String(seconds).padStart(2, '0');
         }
 
-        updateDays();
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
 
-        // Animation de Gamification (Décompte de 100% à la cible)
-        function animateScore(targetScore, callback) {
+        // Animation fluide de la jauge et du compteur
+        function animateGaugeTo(targetPercentile, onComplete) {
+            const progressBar = document.getElementById('progress-bar');
+            const gaugeMarker = document.getElementById('gauge-marker');
             const titleEl = document.getElementById('user-percentile-title');
-            let currentScore = 100;
-            const duration = 1400; // 1.4s de décompte
-            const steps = 30;
-            const stepTime = duration / steps;
-            const decrement = (100 - targetScore) / steps;
+            const scoreTextEl = document.getElementById('score-text');
 
             titleEl.classList.remove('score-lock');
 
-            const timer = setInterval(() => {
-                currentScore -= decrement;
-                if (currentScore <= targetScore) {
-                    currentScore = targetScore;
-                    clearInterval(timer);
-                    titleEl.innerText = `Top ${Math.round(currentScore)}%`;
-                    titleEl.classList.add('score-lock');
-                    if (callback) callback();
+            const targetProgress = 100 - targetPercentile; 
+
+            // Déclenchement de l'animation CSS fluide
+            requestAnimationFrame(() => {
+                progressBar.style.width = `${targetProgress}%`;
+                gaugeMarker.style.left = `${Math.min(targetProgress, 98)}%`;
+            });
+
+            // Compteur numérique synchronisé
+            const duration = 1800; // 1.8s
+            const startTime = performance.now();
+
+            function updateCounter(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progressRatio = Math.min(elapsed / duration, 1);
+                
+                // Formule de ralentissement fluide (easeOutCubic)
+                const easedProgress = 1 - Math.pow(1 - progressRatio, 3);
+                const currentProgress = easedProgress * targetProgress;
+                const currentPercentile = Math.round(100 - currentProgress);
+
+                titleEl.innerText = `Top ${currentPercentile}%`;
+                scoreTextEl.innerText = `Top ${currentPercentile}%`;
+
+                if (progressRatio < 1) {
+                    requestAnimationFrame(updateCounter);
                 } else {
-                    titleEl.innerText = `Top ${Math.round(currentScore)}%`;
+                    titleEl.innerText = `Top ${targetPercentile}%`;
+                    scoreTextEl.innerText = `Top ${targetPercentile}%`;
+                    titleEl.classList.add('score-lock');
+
+                    if (onComplete) onComplete();
                 }
-            }, stepTime);
-        }
-
-        // --- NOUVELLE FONCTION D'EXPLOSION DE DE POPCORNS ---
-        function triggerPopcorn() {
-            const container = document.getElementById('popcorn-container');
-            container.innerHTML = ''; // Réinitialisation
-
-            const popcornCount = 70; // Nombre de pop-corns projetés
-
-            for (let i = 0; i < popcornCount; i++) {
-                const popcorn = document.createElement('img');
-                popcorn.src = 'Images/Popcorn.png'; // Ton image Popcorn.png
-                popcorn.className = 'popcorn-particle';
-
-                // Position de départ aléatoire en X (0% à 100% de l'écran)
-                const startX = Math.random() * 100;
-                popcorn.style.left = `${startX}vw`;
-
-                // Taille aléatoire des pop-corns (entre 35px et 70px)
-                const size = Math.random() * 35 + 35;
-                popcorn.style.width = `${size}px`;
-                popcorn.style.height = 'auto';
-
-                // Durée de chute aléatoire (entre 2.5s et 5s)
-                const duration = Math.random() * 2.5 + 2.5;
-                popcorn.style.animationDuration = `${duration}s`;
-
-                // Décalage de démarrage (pour un effet d'explosion continu)
-                const delay = Math.random() * 1.5;
-                popcorn.style.animationDelay = `${delay}s`;
-
-                // Dérive horizontale et rotation aléatoires pendant la chute
-                const drift = (Math.random() - 0.5) * 200; // -100px à +100px
-                const rotation = Math.random() * 720 - 360; // Rotation complète
-                popcorn.style.setProperty('--drift', `${drift}px`);
-                popcorn.style.setProperty('--rot', `${rotation}deg`);
-
-                container.appendChild(popcorn);
             }
 
-            // Nettoyage automatique du DOM après 7 secondes
-            setTimeout(() => {
-                container.innerHTML = '';
-            }, 7000);
+            requestAnimationFrame(updateCounter);
         }
 
         async function fetchDashboard() {
@@ -305,54 +365,64 @@
                 return;
             }
 
-            try {
-                // Simulation locale pour test (CINE001 = Top 5%, autre = Top 20%)
-                const data = (userId === "CINE001") ? 
-                    { isTop5: true, percentile: 5, referrals: 42, referralCode: "AHJDG4" } :
-                    { isTop5: false, percentile: 20, referrals: 28, referralCode: "AHJDG4" };
+            // Simulation : CINE001 = Top 5%, autre = Top 35%
+            const isTop5 = (userId.toUpperCase() === "CINE001");
+            const targetPercentile = isTop5 ? 5 : 35;
+            const referrals = isTop5 ? 42 : 1;
+            const code = "CINE-" + userId.toUpperCase();
 
-                errorEl.classList.add('hidden');
-                document.getElementById('login-section').classList.add('hidden');
-                document.getElementById('dashboard-section').classList.remove('hidden');
+            errorEl.classList.add('hidden');
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('main-subtitle').classList.add('hidden');
+            document.getElementById('dashboard-section').classList.remove('hidden');
 
-                // Lancement de l'animation du score de 100% à data.percentile
-                animateScore(data.percentile, () => {
-                    if (data.isTop5) {
+            // Réinitialisation jauge
+            const progressBar = document.getElementById('progress-bar');
+            const gaugeMarker = document.getElementById('gauge-marker');
+            progressBar.style.width = '0%';
+            gaugeMarker.style.left = '0%';
+
+            document.getElementById('share-code').innerText = code;
+            document.getElementById('stat-referrals').innerText = referrals;
+
+            // Gestion dynamique du texte Friend / Friends
+            document.getElementById('referrals-label').innerText = referrals === 1 ? "Friend referred" : "Friends referred";
+
+            const progressCardEl = document.getElementById('progress-card');
+            const statusEl = document.getElementById('status-message');
+            const statCardEl = document.getElementById('stat-card');
+            const codeCardEl = document.getElementById('code-card');
+            const shareCodeEl = document.getElementById('share-code');
+
+            // Couleurs de thème : Vert (Top 20% ou mieux) vs Jaune (Hors Top 20%)
+            const greenBg = "bg-[#C0E8C1]";
+            const yellowBg = "bg-[#FDE68A]";
+
+            animateGaugeTo(targetPercentile, () => {
+                if (targetPercentile <= 20) {
+                    // Application des styles Verts
+                    progressCardEl.className = `p-5 rounded-xl border-2 border-black shadow-[2px_2px_0px_#000] mb-6 transition-colors ${greenBg}`;
+                    statusEl.className = `text-center p-5 rounded-xl border-2 border-black font-medium text-base ${greenBg} text-black mb-6 transition-colors`;
+                    statusEl.innerHTML = "<strong>Congratulations!</strong> You're in the Top 20%. Keep your position until Dec 1 to get your yearly free subscription!";
+                    
+                    statCardEl.className = `p-6 border-2 border-black rounded-xl ${greenBg} text-center mb-6 transition-colors`;
+                    codeCardEl.className = `${greenBg} border-2 border-black p-4 rounded-xl mb-2 text-center transition-colors`;
+                    shareCodeEl.className = `text-2xl font-black text-black ${greenBg} px-4 py-2 rounded-lg border-2 border-black tracking-widest transition-colors`;
+
+                    if (isTop5) {
                         triggerPopcorn();
                     }
-                });
-
-                document.getElementById('share-code').innerText = data.referralCode || "AHJDG4";
-                document.getElementById('stat-referrals').innerText = data.referrals;
-                
-                const statusEl = document.getElementById('status-message');
-                const statCardEl = document.getElementById('stat-card');
-                const codeCardEl = document.getElementById('code-card');
-                const shareCodeEl = document.getElementById('share-code');
-
-                if (data.isTop5) {
-                    const greenBg = "bg-[#C0E8C1]";
-                    statusEl.className = `text-center p-5 rounded-xl border-2 border-black font-medium text-base ${greenBg} text-black mb-6`;
-                    statusEl.innerHTML = "<strong>You're a true film lover!</strong> You've earned your place in the Top 5%. Hold your position until Dec 1 to get 12 months of unlimited cinema.";
-                    
-                    statCardEl.className = `p-6 border-2 border-black rounded-xl ${greenBg} text-center mb-6`;
-                    codeCardEl.className = `${greenBg} border-2 border-black p-4 rounded-xl mb-2 text-center`;
-                    shareCodeEl.className = `text-2xl font-black text-black ${greenBg} px-4 py-2 rounded-lg border-2 border-black tracking-widest`;
-
                 } else {
-                    const yellowBg = "bg-[#FDE68A]";
-                    statusEl.className = `text-center p-5 rounded-xl border-2 border-black font-medium text-base ${yellowBg} text-black mb-6`;
-                    statusEl.innerHTML = `Not in the Top 5% yet. Get more friends to sign up with your code to move up the rankings before Dec 1, 2026!`;
+                    // Application des styles Jaunes
+                    progressCardEl.className = `p-5 rounded-xl border-2 border-black shadow-[2px_2px_0px_#000] mb-6 transition-colors ${yellowBg}`;
+                    statusEl.className = `text-center p-5 rounded-xl border-2 border-black font-medium text-base ${yellowBg} text-black mb-6 transition-colors`;
+                    statusEl.innerHTML = `You are currently in the <strong>Top ${targetPercentile}%</strong>. Refer more friends to climb up the ranking before Dec 1, 2026!`;
                     
-                    statCardEl.className = `p-6 border-2 border-black rounded-xl ${yellowBg} text-center mb-6`;
-                    codeCardEl.className = `${yellowBg} border-2 border-black p-4 rounded-xl mb-2 text-center`;
-                    shareCodeEl.className = `text-2xl font-black text-black ${yellowBg} px-4 py-2 rounded-lg border-2 border-black tracking-widest`;
+                    statCardEl.className = `p-6 border-2 border-black rounded-xl ${yellowBg} text-center mb-6 transition-colors`;
+                    codeCardEl.className = `${yellowBg} border-2 border-black p-4 rounded-xl mb-2 text-center transition-colors`;
+                    shareCodeEl.className = `text-2xl font-black text-black ${yellowBg} px-4 py-2 rounded-lg border-2 border-black tracking-widest transition-colors`;
                 }
-
-            } catch (err) {
-                errorEl.innerText = err.message || "User not found";
-                errorEl.classList.remove('hidden');
-            }
+            });
         }
 
         function copyCode() {
@@ -363,11 +433,37 @@
 
         function logout() {
             document.getElementById('cineville-id').value = '';
-            document.getElementById('user-percentile-title').innerText = "--";
+            document.getElementById('user-percentile-title').innerText = "How about one year of free cinema?";
+            document.getElementById('score-text').innerText = "Top 100%";
+            document.getElementById('progress-bar').style.width = '0%';
+            document.getElementById('gauge-marker').style.left = '0%';
             document.getElementById('stat-referrals').innerText = "--";
+            document.getElementById('referrals-label').innerText = "Friend(s) referred";
             document.getElementById('dashboard-section').classList.add('hidden');
+            document.getElementById('main-subtitle').classList.remove('hidden');
             document.getElementById('login-section').classList.remove('hidden');
             document.getElementById('popcorn-container').innerHTML = '';
+        }
+
+        function triggerPopcorn() {
+            const container = document.getElementById('popcorn-container');
+            container.innerHTML = '';
+
+            for (let i = 0; i < 60; i++) {
+                const popcorn = document.createElement('img');
+                popcorn.src = 'Images/Popcorn.png';
+                popcorn.className = 'popcorn-particle';
+                popcorn.style.left = `${Math.random() * 100}vw`;
+                popcorn.style.width = `${Math.random() * 30 + 30}px`;
+                popcorn.style.animationDuration = `${Math.random() * 2 + 2}s`;
+                popcorn.style.animationDelay = `${Math.random() * 1}s`;
+                popcorn.style.setProperty('--drift', `${(Math.random() - 0.5) * 200}px`);
+                popcorn.style.setProperty('--rot', `${Math.random() * 360}deg`);
+
+                container.appendChild(popcorn);
+            }
+
+            setTimeout(() => { container.innerHTML = ''; }, 6000);
         }
     </script>
 </body>
